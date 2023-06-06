@@ -1,49 +1,32 @@
 import { useQuery } from "react-query";
-import { useState } from "react";
 import { fetchLocations } from "../api/api";
-import { Card, Text, Group, Flex, Pagination, Loader } from "@mantine/core";
-import { Link } from "react-router-dom";
-import { Location } from "../api/api.types";
+import { Flex, Pagination, Loader } from "@mantine/core";
+import { useUrlParams } from "../hooks/urlParams";
+import { TableComponent } from "../components/TableComponent";
+
 
 const Locations = () => {
-  const [activePage, setPage] = useState<number>(1);
+  const [params, setParams] = useUrlParams();
+  const { page } = params;
 
-  const { data, isLoading } = useQuery(["locations", activePage], () =>
-    fetchLocations(activePage)
+  const { data, isLoading } = useQuery(["locations", page], () =>
+    fetchLocations(page)
   );
+
+  const handlePageChange = (newPage: number) => {
+    setParams({ ...params, page: newPage });
+  };
 
   return (
     <div>
       {isLoading && <Loader />}
       {!isLoading && data && (
         <>
-          <Flex
-            wrap="wrap"
-            justify="center"
-            align="center"
-            gap={30}
-            maw="85vw"
-            mx="auto"
-          >
-            {data.results.map((location: Location) => (
-              <div key={location.id}>
-                <Link
-                  to={`/locations/${location.id}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <Card shadow="sm" padding="sm" mb={25} radius="sm" withBorder>
-                    <Group position="apart" mt="md" mb="xs">
-                      <Text weight={500}>{location.name}</Text>
-                    </Group>
-                  </Card>
-                </Link>
-              </div>
-            ))}
-          </Flex>
-          <Flex justify="center" align="center" mih="40vh">
+          <TableComponent data={data.results} type="locations" />
+          <Flex justify="center" align="center" mih="18vh">
             <Pagination
-              value={activePage}
-              onChange={setPage}
+              value={page}
+              onChange={handlePageChange}
               total={data.info.pages}
             />
           </Flex>

@@ -1,13 +1,13 @@
 import { MantineProvider } from "@mantine/core";
 import Characters from "./Pages/Characters";
-import CharacterDetails from "./components/CharacterDetails";
+import CharacterDetails from "./Pages/CharacterDetails";
 import { QueryClientProvider, queryClient } from "./queryClient";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import NavigationHeader from "./components/NavigationHeader";
 import Locations from "./Pages/Locations";
-import LocationDetails from "./components/LocationDetails";
+import LocationDetails from "./Pages/LocationDetails";
 import Episodes from "./Pages/Episodes";
-import EpisodeDetails from "./components/EpisodeDetails";
+import EpisodeDetails from "./Pages/EpisodeDetails";
 
 export default function App() {
   return (
@@ -21,7 +21,7 @@ export default function App() {
               path="/characters/:characterId"
               element={<CharacterDetails />}
             />
-            <Route path="/locations" element={<Locations />} />
+            <Route path="/locations/" element={<Locations />} />
             <Route
               path="/locations/:locationId"
               element={<LocationDetails />}

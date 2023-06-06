@@ -1,112 +1,58 @@
-import { useQuery } from "react-query";
-import { useState } from "react";
-import { fetchCharacters } from "../api/api";
-import {
-  Card,
-  Image,
-  Text,
-  Group,
-  Flex,
-  Pagination,
-  Loader,
-  TextInput,
-  Select,
-} from "@mantine/core";
-import { Link } from "react-router-dom";
-import { Character } from "../api/api.types";
+import { useUrlParams } from "../hooks/urlParams";
+import { Flex, Pagination, Loader } from "@mantine/core";
+import useCharacterSearch from "../hooks/useCharacterSearch";
+import useFetchCharacters from "../hooks/useFetchCharacters";
+import SearchAndFilter from "../components/SearchAndFilter";
+import CharacterCards from "../components/CharacterCards";
 
 const Characters = () => {
-  const [activePage, setPage] = useState<number>(1);
-  const [searchText, setSearchText] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [params, setParams] = useUrlParams();
+  const { page } = params;
 
-  const { data, isLoading } = useQuery(
-    ["characters", activePage, searchText, statusFilter],
-    () => fetchCharacters(activePage, searchText, statusFilter),
-    {
-      keepPreviousData: true,
-    }
+  // Custom hook to search and filter 
+  const {
+    searchText,
+    statusFilter,
+    handleSearchChange,
+    handleStatusFilterChange,
+  } = useCharacterSearch();
+
+  // Custom hook to fetch characters
+  const { data, isLoading } = useFetchCharacters(
+    page,
+    searchText,
+    statusFilter
   );
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(event.target.value);
-  };
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
+  // Page change and update URL parameters
+  const handlePageChange = (newPage: number) => {
+    setParams({ ...params, page: newPage });
   };
 
   return (
     <div>
       <Flex justify="center" align="center" gap="xl" mb={10}>
-        <TextInput
-          radius="md"
-          value={searchText}
-          onChange={handleSearchChange}
-          placeholder="Search characters"
-          variant="filled"
-          mb={16}
-          w={400}
-        />
-
-        <Select
-          data={[
-            { value: "", label: "All" },
-            { value: "Alive", label: "Alive" },
-            { value: "Dead", label: "Dead" },
-            { value: "unknown", label: "Unknown" },
-          ]}
-          value={statusFilter}
-          onChange={handleStatusFilterChange}
-          placeholder="Filter by status"
-          variant="filled"
-          mb={16}
-          radius="md"
+        <SearchAndFilter
+          searchText={searchText}
+          handleSearchChange={handleSearchChange}
+          statusFilter={statusFilter}
+          handleStatusFilterChange={handleStatusFilterChange}
         />
       </Flex>
-      {isLoading && <Loader />}
-      {!isLoading && data && (
+      {isLoading ? (
+        <Loader />
+      ) : (
         <>
-          <Flex
-            wrap="wrap"
-            justify="center"
-            align="center"
-            gap={30}
-            maw="80vw"
-            mx="auto"
-          >
-            {data.results.map((character: Character) => (
-              <div key={character.id}>
-                <Link
-                  to={`/characters/${character.id}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <Card shadow="sm" padding="sm" radius="sm" withBorder>
-                    <Card.Section>
-                      <Image
-                        maw={240}
-                        mx="auto"
-                        src={character.image}
-                        alt={character.name}
-                      />
-                    </Card.Section>
-                    <Group position="center" mt="md" mb="xs">
-                      <Text weight={500} size="lg">
-                        {character.name}
-                      </Text>
-                    </Group>
-                  </Card>
-                </Link>
-              </div>
-            ))}
-          </Flex>
-          <Flex justify="center" align="center" my={30}>
-            <Pagination
-              value={activePage}
-              onChange={setPage}
-              total={data.info.pages}
-            />
-          </Flex>
+          {data && 'results' in data &&  <CharacterCards characters={data.results} />}
+          {data && 'results' in data && data.info && (
+            <Flex justify="center" align="center" my={30}>
+              <Pagination
+                value={page}
+                onChange={handlePageChange}
+                total={data.info.pages}
+              />
+            </Flex>
+          )}
         </>
       )}
     </div>
